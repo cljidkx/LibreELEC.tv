@@ -1,13 +1,12 @@
-From ef15dae1308eeff02cc5a09dfff0c0f4312b6819 Mon Sep 17 00:00:00 2001
+From 8fe5e04d644a8e511876687d4b4ab4eb17c74cb2 Mon Sep 17 00:00:00 2001
 From: dengkx <1498971779@qq.com>
-Date: Mon, 21 Jun 2021 15:22:09 +0800
+Date: Wed, 23 Jun 2021 17:37:09 +0800
 Subject: [PATCH] RK3399: add roc-pc-plus
 
 ---
  arch/arm64/boot/dts/rockchip/Makefile         |   1 +
- .../boot/dts/rockchip/rk3399-roc-pc-plus.dts  | 319 ++++++++++++++++++
- sound/soc/codecs/es8328.c                     | 111 ++++++
- 3 files changed, 431 insertions(+)
+ .../boot/dts/rockchip/rk3399-roc-pc-plus.dts  | 317 ++++++++++++++++++
+ 2 files changed, 318 insertions(+)
  create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-roc-pc-plus.dts
 
 diff --git a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
@@ -24,10 +23,10 @@ index 26661c7b736b..102539d3a112 100644
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-rock-pi-4c.dtb
 diff --git a/arch/arm64/boot/dts/rockchip/rk3399-roc-pc-plus.dts b/arch/arm64/boot/dts/rockchip/rk3399-roc-pc-plus.dts
 new file mode 100644
-index 000000000000..174e0656e260
+index 000000000000..61d86f0c7e0f
 --- /dev/null
 +++ b/arch/arm64/boot/dts/rockchip/rk3399-roc-pc-plus.dts
-@@ -0,0 +1,319 @@
+@@ -0,0 +1,317 @@
 +/dts-v1/;
 +#include "rk3399-roc-pc.dtsi"
 +
@@ -70,43 +69,13 @@ index 000000000000..174e0656e260
 +		vin-supply = <&sys_12v>;
 +	};
 +
-+	vcc_wifi: vcc-wifi {
-+		status = "okay";
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc_wifi";
-+		enable-active-high;
-+		gpio = <&gpio2 4 GPIO_ACTIVE_HIGH>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&vcc_wifi_h>;
-+		regulator-always-on;
-+		regulator-boot-on;
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+	};
-+
-+	wireless_wlan: wireless-wlan {
-+		compatible = "wlan-platdata";
-+		rockchip,grf = <&grf>;
-+		wifi_chip_type = "ap6354";
-+		sdio_vref = <1800>;
-+		WIFI,host_wake_irq = <&gpio0 3 GPIO_ACTIVE_HIGH>; /* GPIO0_a3 */
-+		status = "disabled";
-+	};
-+
-+	wireless_bluetooth: wireless-bluetooth {
-+		compatible = "bluetooth-platdata";
-+		//wifi-bt-power-toggle;
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
 +		clocks = <&rk808 1>;
-+		clock-name = "ext_clock";
-+		uart_rts_gpios = <&gpio2 19 GPIO_ACTIVE_LOW>; /* GPIO2_C3 */
-+		pinctrl-names = "default", "rts_gpio";
-+		pinctrl-0 = <&uart0_rts>;
-+		pinctrl-1 = <&uart0_gpios>;
-+		//BT,power_gpio  = <&gpio3 19 GPIO_ACTIVE_HIGH>; /* GPIOx_xx */
-+		BT,reset_gpio    = <&gpio0 9 GPIO_ACTIVE_HIGH>; /* GPIO0_B1 */
-+		BT,wake_gpio     = <&gpio2 26 GPIO_ACTIVE_HIGH>; /* GPIO2_D2 */
-+		BT,wake_host_irq = <&gpio0 4 GPIO_ACTIVE_HIGH>; /* GPIO0_A4 */
-+		status = "disabled";
++		clock-names = "ext_clock";
++		pinctrl-names = "default";
++		pinctrl-0 = <&wifi_enable_h>;
++		reset-gpios = <&gpio2 4 GPIO_ACTIVE_LOW>;
 +	};
 +
 +	es8388-sound {
@@ -250,7 +219,7 @@ index 000000000000..174e0656e260
 +
 +
 +&pinctrl {
-+    ngff {
++	ngff {
 +		vcc3v3_ngff_en: vcc3v3-ngff-en {
 +			rockchip,pins = <4 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
@@ -266,18 +235,32 @@ index 000000000000..174e0656e260
 +		};
 +	};
 +
-+	wireless-bluetooth {
-+		uart0_gpios: uart0-gpios {
-+			rockchip,pins =
-+				<2 19 RK_FUNC_GPIO &pcfg_pull_none>;
++	bt {
++		bt_enable_h: bt-enable-h {
++			rockchip,pins = <0 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
-+	};
-+	wifi {
-+		vcc_wifi_h: vcc-wifi-h {
-+			rockchip,pins = <2 4 RK_FUNC_GPIO &pcfg_pull_none>;
++
++		bt_host_wake_l: bt-host-wake-l {
++			rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		bt_wake_l: bt-wake-l {
++			rockchip,pins = <2 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
 +	};
 +
++	sdio-pwrseq {
++		wifi_enable_h: wifi-enable-h {
++			rockchip,pins =
++				<2 4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
++	wifi {
++		wifi_host_wake_l: wifi-host-wake-l {
++			rockchip,pins = <0 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
 +
 +	es8388-pins {
 +		ear_ctl_h: ear-ctl-h {
@@ -307,7 +290,7 @@ index 000000000000..174e0656e260
 +		yellow_led_pin: yellow-led-pin {
 +			rockchip,pins = <0 13 RK_FUNC_GPIO &pcfg_pull_none>;
 +		};
-+	};
++    };
 +
 +	ir {
 +		ir_int: ir-int {
@@ -317,210 +300,51 @@ index 000000000000..174e0656e260
 +};
 +
 +&sdio0 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	clock-frequency = <50000000>;
 +	bus-width = <4>;
-+	cap-sd-highspeed;
 +	cap-sdio-irq;
++	cap-sd-highspeed;
++	no-emmc;
 +	keep-power-in-suspend;
 +	mmc-pwrseq = <&sdio_pwrseq>;
 +	non-removable;
++	num-slots = <1>;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
 +	sd-uhs-sdr104;
-+	vmmc-supply = <&vcc3v3_ngff>;
-+	vqmmc-supply = <&vcc_1v8>;
++
 +	status = "okay";
++
++	brcmf: wifi@1 {
++		compatible = "brcm,bcm4329-fmac";
++		reg = <1>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <RK_PA3 GPIO_ACTIVE_HIGH>;
++		interrupt-names = "host-wake";
++		pinctrl-names = "default";
++		pinctrl-0 = <&wifi_host_wake_l>;
++	};
 +};
 +
 +&uart0 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&uart0_xfer &uart0_cts &uart0_rts>;
 +	status = "okay";
++
++	bluetooth {
++		compatible = "brcm,bcm43438-bt";
++		clocks = <&rk808 1>;
++		clock-names = "ext_clock";
++		device-wakeup-gpios = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
++		host-wakeup-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_HIGH>;
++		shutdown-gpios = <&gpio0 RK_PB1 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
++	};
 +};
-+
-+/*
-+&fusb0 {
-+	status = "disabled";
-+};
-+
-+
-+&fusb1 {
-+	status = "disabled";
-+};
-+*/
-diff --git a/sound/soc/codecs/es8328.c b/sound/soc/codecs/es8328.c
-index 7e26231a596a..2373b39cc572 100644
---- a/sound/soc/codecs/es8328.c
-+++ b/sound/soc/codecs/es8328.c
-@@ -21,8 +21,13 @@
- #include <sound/pcm_params.h>
- #include <sound/soc.h>
- #include <sound/tlv.h>
-+#include <linux/of_gpio.h>
-+#include <linux/gpio.h>
- #include "es8328.h"
-
-+#define INVALID_GPIO		   -1
-+#define ES8328_CODEC_SET_HP		1
-+
- static const unsigned int rates_12288[] = {
- 	8000, 12000, 16000, 24000, 32000, 48000, 96000,
- };
-@@ -86,8 +91,18 @@ struct es8328_priv {
- 	const int *mclk_ratios;
- 	bool master;
- 	struct regulator_bulk_data supplies[ES8328_SUPPLY_NUM];
-+
-+	int hp_ctl_gpio;
-+	int hp_det_gpio;
-+
-+	bool muted;
-+	bool hp_inserted;
-+	bool hp_gpio_level;
-+	bool hp_det_level;
- };
-
-+static struct es8328_priv *es8328_private;
-+
- /*
-  * ES8328 Controls
-  */
-@@ -112,6 +127,40 @@ static const struct {
- 	{ 48000, ES8328_DACCONTROL6_DEEMPH_48k },
- };
-
-+static int es8328_set_gpio(int gpio, bool level)
-+{
-+	struct es8328_priv *es8328 = es8328_private;
-+
-+	if (!es8328)
-+	return 0;
-+
-+	if ((gpio & ES8328_CODEC_SET_HP) && es8328
-+	    && es8328->hp_ctl_gpio != INVALID_GPIO) {
-+		gpio_set_value(es8328->hp_ctl_gpio, level);
-+	}
-+
-+	return 0;
-+}
-+
-+static irqreturn_t hp_det_irq_handler(int irq, void *dev_id)
-+{
-+	struct es8328_priv *es8328 = es8328_private;
-+
-+	if (gpio_get_value(es8328->hp_det_gpio))
-+		es8328->hp_inserted = 1;
-+	else
-+		es8328->hp_inserted = 0;
-+
-+	if (!es8328->muted && es8328->hp_inserted)
-+		es8328_set_gpio(ES8328_CODEC_SET_HP, es8328->hp_gpio_level);
-+	else
-+		es8328_set_gpio(ES8328_CODEC_SET_HP, !es8328->hp_gpio_level);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+
- static int es8328_set_deemph(struct snd_soc_component *component)
- {
- 	struct es8328_priv *es8328 = snd_soc_component_get_drvdata(component);
-@@ -451,6 +500,13 @@ static const struct snd_soc_dapm_route es8328_dapm_routes[] = {
-
- static int es8328_mute(struct snd_soc_dai *dai, int mute, int direction)
- {
-+	struct es8328_priv *es8328 = snd_soc_component_get_drvdata(dai->component);
-+	es8328->muted = mute;
-+	if (!mute && es8328->hp_inserted)
-+		es8328_set_gpio(ES8328_CODEC_SET_HP, es8328->hp_gpio_level);
-+	else
-+		es8328_set_gpio(ES8328_CODEC_SET_HP, !es8328->hp_gpio_level);
-+
- 	return snd_soc_component_update_bits(dai->component, ES8328_DACCONTROL3,
- 			ES8328_DACCONTROL3_DACMUTE,
- 			mute ? ES8328_DACCONTROL3_DACMUTE : 0);
-@@ -795,6 +851,21 @@ static int es8328_component_probe(struct snd_soc_component *component)
- 		goto clk_fail;
- 	}
-
-+	if (es8328->hp_det_gpio != INVALID_GPIO) {
-+		if (gpio_get_value(es8328->hp_det_gpio) == es8328->hp_det_level)
-+			es8328->hp_inserted = 1;
-+	} else {
-+		es8328->hp_inserted = 1;
-+	}
-+
-+
-+	if (!strncmp(component->dev->of_node->name, "es8388", 6)) {
-+		usleep_range(18000, 20000);
-+		snd_soc_component_update_bits(component, ES8328_DACCONTROL17,
-+			ES8328_DACCONTROL17_LD2LO, ES8328_DACCONTROL17_LD2LO);
-+		snd_soc_component_update_bits(component, ES8328_DACCONTROL20,
-+			ES8328_DACCONTROL20_RD2RO, ES8328_DACCONTROL20_RD2RO);
-+	}
- 	return 0;
-
- clk_fail:
-@@ -850,6 +921,8 @@ int es8328_probe(struct device *dev, struct regmap *regmap)
- 	struct es8328_priv *es8328;
- 	int ret;
- 	int i;
-+	int hp_irq = 0;
-+	enum of_gpio_flags flags;
-
- 	if (IS_ERR(regmap))
- 		return PTR_ERR(regmap);
-@@ -859,6 +932,7 @@ int es8328_probe(struct device *dev, struct regmap *regmap)
- 		return -ENOMEM;
-
- 	es8328->regmap = regmap;
-+	es8328_private = es8328;
-
- 	for (i = 0; i < ARRAY_SIZE(es8328->supplies); i++)
- 		es8328->supplies[i].supply = supply_names[i];
-@@ -870,6 +944,43 @@ int es8328_probe(struct device *dev, struct regmap *regmap)
- 		return ret;
- 	}
-
-+	es8328->hp_ctl_gpio = of_get_named_gpio_flags(dev->of_node, "hp-ctl-gpio", 0, &flags);
-+	if (es8328->hp_ctl_gpio < 0) {
-+		dev_info(dev, "Can not read property hp_ctl_gpio\n");
-+		es8328->hp_ctl_gpio = INVALID_GPIO;
-+	} else {
-+		es8328->hp_gpio_level = (flags & OF_GPIO_ACTIVE_LOW) ? 0 : 1;
-+		ret = devm_gpio_request_one(dev, es8328->hp_ctl_gpio, GPIOF_DIR_OUT, "hp_ctl_gpio");
-+		if (ret != 0) {
-+			dev_err(dev, "Failed to request hp_ctl_gpio\n");
-+			return ret;
-+		}
-+		es8328_set_gpio(ES8328_CODEC_SET_HP, !es8328->hp_gpio_level);
-+	}
-+
-+	es8328->hp_det_gpio = of_get_named_gpio_flags(dev->of_node, "hp-det-gpio", 0, &flags);
-+	if (es8328->hp_det_gpio < 0) {
-+		dev_info(dev, "Can not read property hp_det_gpio\n");
-+		es8328->hp_det_gpio = INVALID_GPIO;
-+	} else {
-+		es8328->hp_det_level = (flags & OF_GPIO_ACTIVE_LOW) ? 0 : 1;
-+		ret = devm_gpio_request_one(dev, es8328->hp_det_gpio, GPIOF_IN, NULL);
-+		if (ret != 0) {
-+			dev_err(dev, "Failed to request hp_det_gpio\n");
-+			return ret;
-+		}
-+		hp_irq = gpio_to_irq(es8328->hp_det_gpio);
-+
-+		if (hp_irq) {
-+			ret = devm_request_threaded_irq(dev, hp_irq, NULL, hp_det_irq_handler,
-+					IRQ_TYPE_EDGE_BOTH | IRQF_ONESHOT, dev->of_node->name, NULL);
-+			if (ret < 0) {
-+				dev_err(dev, "request_irq failed: %d\n", ret);
-+				return ret;
-+			}
-+		}
-+	}
-+
- 	dev_set_drvdata(dev, es8328);
-
- 	return devm_snd_soc_register_component(dev,
+\ No newline at end of file
 --
 2.20.1
 
